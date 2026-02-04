@@ -1,0 +1,3 @@
+# Tips on Writing Clean Classes
+
+Coming soon...
