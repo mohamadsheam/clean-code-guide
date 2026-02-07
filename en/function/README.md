@@ -162,4 +162,229 @@ Now:
 
 - Easier to read, maintain, and extend
 - Callers can pass a literal or construct an object beforehand
-- Named properties improve clarity-
+- Named properties improve clarity
+
+## 4. Avoid Side Effects
+
+A function has a **side effect** when it modifies something outside its own scope — like changing a global variable, mutating an input parameter, or writing to a file. Side effects make code unpredictable and harder to debug.
+
+**Bad Example:**
+
+```js
+let cartTotal = 0;
+
+function addToCart(item) {
+  cartTotal += item.price; // modifies external state
+  items.push(item);        // mutates external array
+}
+```
+
+Problems:
+
+- The function secretly changes global state
+- Hard to test in isolation
+- Order of function calls matters unexpectedly
+
+**Better:**
+
+```js
+function addToCart(cart, item) {
+  return {
+    items: [...cart.items, item],
+    total: cart.total + item.price
+  };
+}
+
+// Usage
+const newCart = addToCart(currentCart, newItem);
+```
+
+Now the function is **pure** — same inputs always produce the same outputs, with no hidden changes.
+
+## 5. Use Early Returns (Guard Clauses)
+
+Deeply nested `if-else` blocks make code hard to follow. **Guard clauses** handle edge cases early and exit the function, keeping the main logic flat and readable.
+
+**Bad Example:**
+
+```js
+function getDiscount(user) {
+  if (user) {
+    if (user.isActive) {
+      if (user.isPremium) {
+        return 0.2;
+      } else {
+        return 0.1;
+      }
+    } else {
+      return 0;
+    }
+  } else {
+    return 0;
+  }
+}
+```
+
+**Better:**
+
+```js
+function getDiscount(user) {
+  if (!user) return 0;
+  if (!user.isActive) return 0;
+  if (user.isPremium) return 0.2;
+  return 0.1;
+}
+```
+
+Benefits:
+
+- Reduces nesting and cognitive load
+- Edge cases are handled upfront
+- Main logic becomes immediately clear
+
+## 6. Avoid Boolean Flag Arguments
+
+Passing a boolean to toggle behavior inside a function is a code smell. It usually means the function is doing more than one thing.
+
+**Bad Example:**
+
+```js
+function createFile(name, isTemp) {
+  if (isTemp) {
+    fs.create(`./temp/${name}`);
+  } else {
+    fs.create(name);
+  }
+}
+
+// Caller has no idea what `true` means without checking the function
+createFile("report.pdf", true);
+```
+
+**Better:**
+
+```js
+function createFile(name) {
+  fs.create(name);
+}
+
+function createTempFile(name) {
+  fs.create(`./temp/${name}`);
+}
+
+// Intent is now crystal clear
+createTempFile("report.pdf");
+```
+
+## 7. Keep Functions at One Level of Abstraction
+
+Mixing high-level logic with low-level details in the same function makes it hard to understand. Each function should operate at a **consistent level of abstraction**.
+
+**Bad Example:**
+
+```js
+function renderPage(pageData) {
+  const html = `<html><head>${pageData.title}</head>`; // low-level
+  const user = getLoggedInUser();                      // high-level
+  const content = parseMarkdown(pageData.body);        // mid-level
+  return html + `<body>${content}</body></html>`;      // low-level
+}
+```
+
+**Better:**
+
+```js
+function renderPage(pageData) {
+  const user = getLoggedInUser();
+  const content = parseMarkdown(pageData.body);
+  return buildHtml(pageData.title, content);
+}
+
+function buildHtml(title, content) {
+  return `<html><head>${title}</head><body>${content}</body></html>`;
+}
+```
+
+Now `renderPage` reads like a story, and low-level HTML construction is delegated.
+
+## 8. Functions Should Either Do Something or Answer Something
+
+This is known as **Command-Query Separation (CQS)**. A function should either perform an action (command) or return data (query) — but not both.
+
+**Bad Example:**
+
+```js
+function setAndGetPreviousValue(obj, key, newValue) {
+  const oldValue = obj[key];
+  obj[key] = newValue;
+  return oldValue;
+}
+```
+
+This function both mutates state and returns a value, making it confusing.
+
+**Better:**
+
+```js
+function getValue(obj, key) {
+  return obj[key];
+}
+
+function setValue(obj, key, value) {
+  obj[key] = value;
+}
+
+// Usage is now explicit
+const previousValue = getValue(config, "timeout");
+setValue(config, "timeout", 5000);
+```
+
+## 9. Write Functions That Are Easy to Test
+
+If a function is hard to test, it's usually a sign of poor design. Testable functions tend to be:
+
+- Pure (no side effects)
+- Small and focused
+- Have explicit dependencies (passed as arguments, not hidden)
+
+**Bad Example:**
+
+```js
+function calculateOrderTotal(orderId) {
+  const order = database.getOrder(orderId); // hidden dependency
+  const discount = getCurrentPromotion();    // hidden dependency
+  return order.items.reduce((sum, item) => sum + item.price, 0) * (1 - discount);
+}
+```
+
+Testing this requires mocking the database and promotion service.
+
+**Better:**
+
+```js
+function calculateOrderTotal(items, discountRate) {
+  const subtotal = items.reduce((sum, item) => sum + item.price, 0);
+  return subtotal * (1 - discountRate);
+}
+
+// Now testing is straightforward
+expect(calculateOrderTotal([{ price: 100 }, { price: 50 }], 0.1)).toBe(135);
+```
+
+---
+
+## Summary
+
+| Tip | Key Takeaway |
+|-----|---------------|
+| Single Responsibility | One function, one job |
+| Descriptive Names | Names should reveal intent |
+| Limit Parameters | Use objects for 3+ parameters |
+| Avoid Side Effects | Prefer pure functions |
+| Early Returns | Reduce nesting with guard clauses |
+| No Boolean Flags | Split into separate functions |
+| One Abstraction Level | Don't mix high and low-level code |
+| Command-Query Separation | Do something OR return something |
+| Testability | If it's hard to test, refactor it |
+
+Clean functions are the foundation of clean code. Master these principles, and your codebase will thank you.
