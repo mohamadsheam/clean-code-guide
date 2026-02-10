@@ -1,6 +1,6 @@
 # Tips on writing clean function
 
-Writing clean functions isn’t about following strict rules — it’s about making our code easy to read, reason about, and change. When each function has a clear purpose, our entire codebase becomes easier to maintain and evolve.
+Writing clean functions isn't about following strict rules — it's about making our code easy to read, reason about, and change. When each function has a clear purpose, our entire codebase becomes easier to maintain and evolve.
 
 Here are few tips that we could follow:
 
@@ -121,6 +121,7 @@ function isPaymentValid(paymentData: PaymentData): boolean {
 ```
 
 Tips to remember:
+
 - Follow already established [naming conventions](https://belev.dev/6-tips-to-improve-naming-and-why-it-is-so-important)
 - Action functions: use verbs (`calculate`, `validate`, `send`)
 - Boolean functions: use question words (`is`, `has`, `can`)
